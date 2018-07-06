@@ -1,0 +1,267 @@
+package VEOToolkitV2/ManifestGenerator;
+
+/***************************************************************
+ *
+ * M A N I F E S T   G E N E R A T O R
+ *
+ * This class generates a manifest from a collection of VEOs.
+ *
+ * Andrew Waugh (andrew.waugh@dvc.vic.gov.au)
+ * Copyright 2005 PROV
+ *
+ **************************************************************/
+
+import java.io.*;
+import javax.xml.parsers.*;
+import org.xml.sax.*;
+import org.xml.sax.helpers.*;
+
+public class ManifestGenerator extends DefaultHandler {
+	SAXParserFactory spf;
+	SAXParser sax;
+
+/**
+ * Default constructor
+ */
+public ManifestGenerator() {
+
+	// set up SAX parser
+	try {
+		spf = SAXParserFactory.newInstance();
+		spf.setValidating(false);
+		// spf.setFeature("http://xml.org/sax/features/resolve-dtd-uris", false);
+		sax = spf.newSAXParser();
+	} catch (SAXNotRecognizedException e) {
+		System.err.println("SAXNotRecognizedException:"+e.getMessage());
+		System.exit(-1);
+	} catch (SAXNotSupportedException e) {
+		System.err.println("SAXNotSupportedException:"+e.getMessage());
+		System.exit(-1);
+	} catch (ParserConfigurationException e) {
+		System.err.println("SAX Parser Exception:"+e.getMessage());
+		System.exit(-1);
+	} catch (SAXException e) {
+		System.err.println("SAXException:"+e.getMessage());
+		System.exit(-1);
+	}
+}
+
+/**
+ * Process VEO
+ *
+ * This method opens a VEO and calls SAX to parse it looking for
+ * information to include in the manifest
+ *
+ * @param veo	the VEO to parse
+ */
+public String processVEO(File veo) throws IOException {
+	FileInputStream fis;
+	InputStreamReader isr;
+	BufferedInputStream bis;
+
+	// check parameters
+	if (veo == null)
+		throw new IOException("veo must not be null");
+
+	// set fileIdentifier, recIdentifier, titlewords, function, subject,
+	// accessStatus, sentence, dateReg, dateClosed to be null
+
+	// open input and output streams
+	fis = new FileInputStream(veo);
+	bis = new BufferedInputStream(fis);
+
+	// start the parse
+	try {
+		if (useStdDtd) {
+			sax.parse(bis, this, "http://www.prov.vic.gov.au/vers/standard/");
+		} else
+			sax.parse(veo, this);
+	} catch (SAXException e) {
+		System.err.println(e.getMessage());
+		e.printStackTrace();
+	}
+
+	// close input and output streams
+	bis.close();
+	fis.close();
+
+	// generate dam:manifest_object_item
+	// dam:computer_filename from File.getAbsoluteFile()
+	// dam:file_identifier from fileIdentifier
+	// dam:record_identifier from recIdentifier if not null else empty elem
+	// dam:veo_title from titlewords
+	// dam:classification from function, subject, or default value
+	// dam:veo_access_category from accessStatus or default value
+	// dam:veo_disposal_authority from sentence
+	// dam:veo_start_date is empty if a record, else dateReg
+	// dam:veo_end_date is dateReg (if record) or dateClosed (if a file & present)
+	// dam:veo_size_kb from File.getLength()
+	// generate end of dam:manifest_object_item
+
+	// return string containing dam:manifest_object_item
+	
+
+		
+}
+
+/**
+ * SAX Events captured
+ */
+
+/**
+ * Start of element
+ *
+ * Write element and attribute to edited document. Push element and vers:id (if
+ * present) onto stack.
+ */
+public void startElement(String uri, String localName,
+			 String qName, Attributes attributes)
+	throws SAXException {
+
+	// push element on stack
+	// match against path for interesting elements
+	// if match 
+		// start recording
+	// else
+		// stop recording
+
+}
+
+/**
+ * Process ignorable whitespace
+ *
+ * Simply output the whitespace
+ */
+/*
+public void ignorableWhitespace(char[] ch, int start, int length)
+	throws SAXException {
+	int i;
+
+	// ignore
+
+	try {
+		for (i=start; i<start+length; i++)
+			bw.write(ch[i]);
+	} catch (IOException ioe) {
+		throw new SAXException("IOException: "+ioe.getMessage());
+	}
+}
+*/
+
+/**
+ * Processing the content of an element
+ *
+ * Ignore content that is purely whitespace (shouldn't cause any problems).
+ */
+
+public void characters(char[] ch, int start, int length)
+	throws SAXException {
+
+	// if recording
+		// remember character array
+}
+
+
+/**
+ * Output the end of an element
+ */
+public void endElement(String uri, String localName, String qName)
+	throws SAXException {
+
+	// if recording
+		// store element value in appropriate global variable
+	// stop recording
+	// if finished a file or record metadata element stop parsing
+		// throw null sax exception
+}
+
+/**
+ * Main program
+ */
+public static void main(String args[]) {
+	ManifestGenerator mg;
+	File veo;
+
+	if (args.length < 2 || args.length > 3) {
+		System.err.println("Useage: VEOToolkitV2.ManifestGenerator.ManifestGenerator");
+		System.exit(-1);
+	}
+	try {
+		if (args.length == 2) {
+			extract = false;
+			veoin = new File(args[0]);
+			veoout = new File(args[1]);
+		} else {
+			extract = true;
+			veoin = new File(args[1]);
+			veoout = new File(args[2]);
+		}
+		pav = new PullApartVEO();
+		pav.processVEO(veoin, veoout, true, extract);
+	} catch (IOException ioe) {
+		System.err.println(ioe.getMessage());
+	}
+
+	// process command line arguments
+		// if no file extension (-v) is specified, assume '.veo'
+		// if '-m' will be a media output & get media type
+		// if '-e' will be electronic output
+		// if '-va' remember va number
+		// if '-vprs' remember vprs number
+		// if '-p', '-t', '-r', '-u', '-st' or '-sr'
+			// get consignment number
+			// pad to four digits with leading zeros
+		// if '-tr' remember transfer number
+		// if no directory is specified, assume current directory
+		// if unrecognised arguement, print help string and exit
+
+	// validate command line arguments
+		// if no media type specified prompt user (default electronic)
+		// if no va number, prompt user
+			// check no leading 'va', if so prompt and try again
+		// if no vprs number, prompt user
+			// check no leading 'vprs', if so prompt and try again
+		// if no consignment type, prompt user
+			// check one of above types
+		// if no transfer job number, prompt user
+
+	// write preamble to standard out
+	// write <?xml...
+	// write dam:set_manifest element
+	// write dam:eletronic_transfer or dam:media_transfer element
+	// write dam:created_timestamp element
+	// write dam:agency_id element
+	// write dam_series_type element
+	// write dam:job_id element
+	// write dam:consignment_type
+	// write dam:consignment_number
+	// write dam:manifest_object_list
+
+	// if media export, assume top level directories represent media
+		// remember directory name
+		// cd to directory
+		// process directory
+	// if electronic export,
+		// process directory
+		// go through each file in the directory
+			// ignore those without correct file extension (ignore case)
+			// extract manifest entry from VEO
+			// output manifest entry 
+
+	// if media export, write list of media to standard out
+		// write dam:media_list
+		// go through lists of media
+			// write dam:media_item
+			// write dam_media_written date from File.lastModified in VERS format
+			// write dam:media_item_number
+			// write dam:media_item_total_number
+			// write dam:media_type from media type
+			// write dam:media_item end element
+		// write dam:media_list end element
+
+	// write postamble to standard out
+	// write dam:manifest_object_list end element
+	// write dam:eletronic_transfer or dam:media_transfer end element
+	// write dam:set_manifest end element
+}
+}
